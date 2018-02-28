@@ -98,7 +98,6 @@ set(INCLUDE_CORE
 # Sources
 # Jerry core
 file(GLOB SOURCE_CORE_API                       api/*.c)
-file(GLOB SOURCE_CORE_DEBUGGER                  debugger/*.c)
 file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
 file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
 file(GLOB SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY  ecma/builtin-objects/typedarray/*.c)
@@ -110,6 +109,20 @@ file(GLOB SOURCE_CORE_LIT                       lit/*.c)
 file(GLOB SOURCE_CORE_PARSER_JS                 parser/js/*.c)
 file(GLOB SOURCE_CORE_PARSER_REGEXP             parser/regexp/*.c)
 file(GLOB SOURCE_CORE_VM                        vm/*.c)
+
+if("${PLATFORM}" STREQUAL "ZEPHYR")
+  set(SOURCE_CORE_DEBUGGER
+    debugger/debugger.c
+    debugger/debugger-sha1.c
+    debugger/debugger-ws-zephyr.c
+  )
+else()
+  set(SOURCE_CORE_DEBUGGER
+    debugger/debugger.c
+    debugger/debugger-sha1.c
+    debugger/debugger-ws.c
+  )
+endif()
 
 set(SOURCE_CORE_FILES
     ${SOURCE_CORE_API}
