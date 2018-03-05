@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -137,6 +138,53 @@ double jerry_port_get_current_time (void);
  * @return the pointer to the jerry instance.
  */
 struct jerry_instance_t *jerry_port_get_current_instance (void);
+
+#ifdef JERRY_DEBUGGER
+
+/*
+ * Debugger Port API
+ */
+
+/**
+ * Debugger connection errors.
+ */
+typedef void* jerry_conn_t;
+
+typedef enum {
+  JERRY_CONN_ERROR_NONE,    /**< no errors */
+  JERRY_CONN_ERROR_AGAIN,   /**< try again */
+  JERRY_CONN_ERROR_INVALID, /**< invalid argument */
+  JERRY_CONN_ERROR_IO,      /**< network I/O error */
+  JERRY_CONN_ERROR_UNKNOWN  /**< unknown error */
+} jerry_conn_errors;
+
+/**
+ * Creates a debugger connection and wait for Client to be connected
+ *
+ * @return the accepted incoming debugger connection
+ */
+jerry_conn_t jerry_port_accept_connection (int port);
+
+/**
+ * Send the message over the debugger connection
+ *
+ * @return status the of the debugger operation
+ */
+jerry_conn_errors jerry_port_connection_send (jerry_conn_t connection_p, const void *data_p, size_t data_len, ssize_t *bytes_sent);
+
+/**
+ * Receive the message over the debugger connection
+ *
+ * @return status the of the receive operation
+ */
+jerry_conn_errors jerry_port_connection_receive (jerry_conn_t connection_p, void *data_p, size_t max_len, ssize_t *bytes_received);
+
+/**
+ * Closes the debugger connection
+ */
+jerry_conn_errors jerry_port_close_connection (jerry_conn_t connection_p);
+
+#endif /* JERRY_DEBUGGER */
 
 /**
  * @}

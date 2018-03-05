@@ -19,11 +19,6 @@
 
 #ifdef JERRY_DEBUGGER
 
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 /**
  * Masking-key is available.
  */
@@ -65,21 +60,16 @@ typedef struct
  * Close the socket connection to the client.
  */
 static void
-jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
+jerry_debugger_close_connection_tcp (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_CONTEXT (debugger_flags) = JERRY_DEBUGGER_VM_IGNORE;
 
-  if (log_error)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
-  }
-
   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Debugger client connection closed.\n");
 
-  close (JERRY_CONTEXT (debugger_connection));
-  JERRY_CONTEXT (debugger_connection) = -1;
+  jerry_port_close_connection (JERRY_CONTEXT (debugger_connection_p));
+  JERRY_CONTEXT (debugger_connection_p) = NULL;
 
   jerry_debugger_free_unreferenced_byte_code ();
 } /* jerry_debugger_close_connection_tcp */
@@ -98,16 +88,20 @@ jerry_debugger_send_tcp (const uint8_t *data_p, /**< data pointer */
 
   do
   {
-    ssize_t sent_bytes = send (JERRY_CONTEXT (debugger_connection), data_p, data_size, 0);
+    ssize_t sent_bytes;
+    jerry_conn_errors err = jerry_port_connection_send (JERRY_CONTEXT (debugger_connection_p),
+                                                        data_p,
+                                                        data_size,
+                                                        &sent_bytes);
 
     if (sent_bytes < 0)
     {
-      if (errno == EWOULDBLOCK)
+      if (err == JERRY_CONN_ERROR_AGAIN)
       {
         continue;
       }
 
-      jerry_debugger_close_connection_tcp (true);
+      jerry_debugger_close_connection_tcp ();
       return false;
     }
 
@@ -185,7 +179,7 @@ jerry_to_base64 (const uint8_t *source_p, /**< source data */
  *         false - otherwise
  */
 static bool
-jerry_process_handshake (int client_socket, /**< client socket */
+jerry_process_handshake (jerry_conn_t connection,   /**< debugger connection  */
                          uint8_t *request_buffer_p) /**< temporary buffer */
 {
   size_t request_buffer_size = 1024;
@@ -202,12 +196,19 @@ jerry_process_handshake (int client_socket, /**< client socket */
       return false;
     }
 
-    ssize_t size = recv (client_socket, request_end_p, length, 0);
+    ssize_t size;
+    jerry_conn_errors err = jerry_port_connection_receive (connection,
+                                                           request_end_p,
+                                                           length,
+                                                           &size);
 
     if (size < 0)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
-      return false;
+      if (err != JERRY_CONN_ERROR_AGAIN)
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: handshake receive failed\n");
+        return false;
+      }
     }
 
     request_end_p += (size_t) size;
@@ -310,55 +311,14 @@ jerry_process_handshake (int client_socket, /**< client socket */
 bool
 jerry_debugger_accept_connection (void)
 {
-  int server_socket;
-  struct sockaddr_in addr;
-  socklen_t sin_size = sizeof (struct sockaddr_in);
-
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons (JERRY_CONTEXT (debugger_port));
-  addr.sin_addr.s_addr = INADDR_ANY;
-
-  if ((server_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
-    return false;
-  }
-
-  int opt_value = 1;
-
-  if (setsockopt (server_socket, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof (int)) == -1)
-  {
-    close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
-    return false;
-  }
-
-  if (bind (server_socket, (struct sockaddr *)&addr, sizeof (struct sockaddr)) == -1)
-  {
-    close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
-    return false;
-  }
-
-  if (listen (server_socket, 1) == -1)
-  {
-    close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
-    return false;
-  }
-
   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Waiting for client connection\n");
 
-  JERRY_CONTEXT (debugger_connection) = accept (server_socket, (struct sockaddr *)&addr, &sin_size);
+  JERRY_CONTEXT (debugger_connection_p) = jerry_port_accept_connection(JERRY_CONTEXT (debugger_port));
 
-  if (JERRY_CONTEXT (debugger_connection) == -1)
+  if (JERRY_CONTEXT (debugger_connection_p) == NULL)
   {
-    close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
     return false;
   }
-
-  close (server_socket);
 
   JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_CONNECTED);
 
@@ -366,7 +326,7 @@ jerry_debugger_accept_connection (void)
 
   JMEM_DEFINE_LOCAL_ARRAY (request_buffer_p, 1024, uint8_t);
 
-  is_handshake_ok = jerry_process_handshake (JERRY_CONTEXT (debugger_connection),
+  is_handshake_ok = jerry_process_handshake (JERRY_CONTEXT (debugger_connection_p),
                                              request_buffer_p);
 
   JMEM_FINALIZE_LOCAL_ARRAY (request_buffer_p);
@@ -382,23 +342,6 @@ jerry_debugger_accept_connection (void)
     return false;
   }
 
-  /* Set non-blocking mode. */
-  int socket_flags = fcntl (JERRY_CONTEXT (debugger_connection), F_GETFL, 0);
-
-  if (socket_flags < 0)
-  {
-    jerry_debugger_close_connection_tcp (true);
-    return false;
-  }
-
-  if (fcntl (JERRY_CONTEXT (debugger_connection), F_SETFL, socket_flags | O_NONBLOCK) == -1)
-  {
-    jerry_debugger_close_connection_tcp (true);
-    return false;
-  }
-
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Connected from: %s\n", inet_ntoa (addr.sin_addr));
-
   JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
   JERRY_CONTEXT (debugger_stop_context) = NULL;
 
@@ -411,7 +354,7 @@ jerry_debugger_accept_connection (void)
 inline void __attr_always_inline___
 jerry_debugger_close_connection (void)
 {
-  jerry_debugger_close_connection_tcp (false);
+  jerry_debugger_close_connection_tcp ();
 } /* jerry_debugger_close_connection */
 
 /**
@@ -457,16 +400,18 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
   {
     uint32_t offset = JERRY_CONTEXT (debugger_receive_buffer_offset);
 
-    ssize_t byte_recv = recv (JERRY_CONTEXT (debugger_connection),
-                              recv_buffer_p + offset,
-                              JERRY_DEBUGGER_MAX_BUFFER_SIZE - offset,
-                              0);
+    ssize_t byte_recv;
+    jerry_conn_errors err = jerry_port_connection_receive (JERRY_CONTEXT (debugger_connection_p),
+                                                           recv_buffer_p + offset,
+                                                           JERRY_DEBUGGER_MAX_BUFFER_SIZE - offset,
+                                                           &byte_recv);
 
     if (byte_recv < 0)
     {
-      if (errno != EWOULDBLOCK)
+      if (err != JERRY_CONN_ERROR_AGAIN)
       {
-        jerry_debugger_close_connection_tcp (true);
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: debugger receive failed\n");
+        jerry_debugger_close_connection_tcp ();
         return true;
       }
 
