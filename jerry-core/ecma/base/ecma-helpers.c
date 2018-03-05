@@ -1541,7 +1541,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     {
       /* Delay the byte code free until the debugger client is notified.
        * If the connection is aborted the pointer is still freed by
-       * jerry_debugger_close_connection(). */
+       * debugger_transport_p->close (). */
       jerry_debugger_byte_code_free_t *byte_code_free_p = (jerry_debugger_byte_code_free_t *) bytecode_p;
       jmem_cpointer_t byte_code_free_head = JERRY_CONTEXT (debugger_byte_code_free_head);
 
