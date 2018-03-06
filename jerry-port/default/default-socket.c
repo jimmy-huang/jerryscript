@@ -23,7 +23,6 @@
 
 #ifdef JERRY_DEBUGGER
 
-
 typedef struct {
 	int fd; /**< holds the file descriptor of the socket communication */
 } jerry_socket_t;
