@@ -305,7 +305,7 @@ typedef struct
 #endif /* PARSER_DUMP_BYTE_CODE */
 
 #ifdef JERRY_DEBUGGER
-  parser_breakpoint_info_t breakpoint_info[JERRY_DEBUGGER_SEND_MAX (parser_list_t)]; /**< extra data for breakpoints */
+  parser_breakpoint_info_t breakpoint_info[JERRY_DEBUGGER_MAX_BUFFER_SIZE / sizeof (parser_list_t)]; /**< bkpt data */
   uint16_t breakpoint_info_count; /**< current breakpoint index */
   parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint was inserted */
 #endif /* JERRY_DEBUGGER */

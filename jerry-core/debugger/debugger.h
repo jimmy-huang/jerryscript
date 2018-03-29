@@ -56,7 +56,7 @@
  * which can be transmitted by one message.
  */
 #define JERRY_DEBUGGER_SEND_MAX(type) \
- ((JERRY_DEBUGGER_MAX_SEND_SIZE - sizeof (jerry_debugger_send_header_t) - 1) / sizeof (type))
+ ((JERRY_CONTEXT (debugger_max_receive_size) - sizeof (jerry_debugger_send_type_t)) / sizeof (type))
 
 /**
  * Debugger operation modes:
@@ -226,7 +226,6 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
   uint8_t max_message_size; /**< maximum incoming message size */
   uint8_t cpointer_size; /**< size of compressed pointers */
@@ -239,7 +238,6 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
 } jerry_debugger_send_type_t;
 
@@ -256,9 +254,8 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
-  uint8_t string[JERRY_DEBUGGER_SEND_MAX (uint8_t)]; /**< string data */
+  uint8_t string[1]; /**< string data */
 } jerry_debugger_send_string_t;
 
 /**
@@ -266,7 +263,6 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
   uint8_t line[sizeof (uint32_t)]; /**< value data */
   uint8_t column[sizeof (uint32_t)]; /**< value data */
@@ -277,7 +273,6 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
   uint8_t byte_code_cp[sizeof (jmem_cpointer_t)]; /**< byte code compressed pointer */
 } jerry_debugger_send_byte_code_cp_t;
@@ -307,7 +302,6 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
   uint8_t allocated_bytes[sizeof (uint32_t)]; /**< allocated bytes */
   uint8_t byte_code_bytes[sizeof (uint32_t)]; /**< byte code bytes */
@@ -321,7 +315,6 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
   uint8_t byte_code_cp[sizeof (jmem_cpointer_t)]; /**< byte code compressed pointer */
   uint8_t offset[sizeof (uint32_t)]; /**< breakpoint offset */
@@ -341,9 +334,8 @@ typedef struct
  */
 typedef struct
 {
-  jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
-  jerry_debugger_frame_t frames[JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t)]; /**< frames */
+  jerry_debugger_frame_t frames[1]; /**< frames */
 } jerry_debugger_send_backtrace_t;
 
 /**
