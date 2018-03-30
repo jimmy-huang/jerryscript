@@ -57,6 +57,17 @@
 #define JERRY_DEBUGGER_RECEIVE_DATA_MODE \
   (JERRY_DEBUGGER_BREAKPOINT_MODE | JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
 
+/**
+ * WebSocket opcode types.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_WEBSOCKET_TEXT_FRAME = 1, /**< text frame */
+  JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME = 2, /**< binary frame */
+  JERRY_DEBUGGER_WEBSOCKET_CLOSE_CONNECTION = 8, /**< close connection */
+  JERRY_DEBUGGER_WEBSOCKET_PING = 9, /**< ping (keep alive) frame */
+  JERRY_DEBUGGER_WEBSOCKET_PONG = 10, /**< reply to ping frame */
+} jerry_websocket_opcode_type_t;
 
 /**
  * Header for incoming packets.
