@@ -41,6 +41,7 @@
  */
 
 #include "debugger.h"
+#include "debugger-sha1.h"
 
 #ifdef JERRY_DEBUGGER
 

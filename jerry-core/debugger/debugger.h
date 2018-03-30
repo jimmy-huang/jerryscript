@@ -458,10 +458,6 @@ void jerry_debugger_close_connection (void);
 bool jerry_debugger_send (size_t data_size);
 bool jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p);
 
-void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
-                                  const uint8_t *input2, size_t input2_len,
-                                  uint8_t output[20]);
-
 #endif /* JERRY_DEBUGGER */
 
 #endif /* !DEBUGGER_H */

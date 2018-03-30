@@ -14,6 +14,7 @@
  */
 
 #include "debugger.h"
+#include "debugger-sha1.h"
 #include "jcontext.h"
 #include "jerryscript-port.h"
 
