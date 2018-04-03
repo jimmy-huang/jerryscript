@@ -206,7 +206,7 @@ jerry_cleanup (void)
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
-    JERRY_CONTEXT (debugger_transport_p)->close_connection ();
+    JERRY_CONTEXT (debugger_transport_p)->close_connection (JERRY_CONTEXT (debugger_transport_p));
   }
 #endif /* JERRY_DEBUGGER */
 

@@ -345,7 +345,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
  *         false - otherwise
  */
 static bool
-jerry_debugger_accept_connection (jerry_debugger_transport_t *transport_p) /**< transport object */
+jerry_debugger_accept_connection_ws (jerry_debugger_transport_t *transport_p) /**< transport object */
 {
   JERRY_UNUSED (transport_p);
 
@@ -467,8 +467,9 @@ jerry_debugger_accept_connection (jerry_debugger_transport_t *transport_p) /**< 
  * Close the socket connection to the client.
  */
 static inline void __attr_always_inline___
-jerry_debugger_close_connection (void)
+jerry_debugger_close_connection_ws (struct jerry_debugger_transport_t *transport_p) /**< transport object */
 {
+  JERRY_UNUSED (transport_p);
   jerry_debugger_close_connection_tcp (false);
 } /* jerry_debugger_close_connection */
 
@@ -484,8 +485,10 @@ jerry_debugger_close_connection (void)
  *         false - otherwise
  */
 static bool
-jerry_debugger_send (size_t data_size) /**< data size */
+jerry_debugger_send_ws (struct jerry_debugger_transport_t *transport_p, /**< transport object */
+                        size_t data_size) /**< data size */
 {
+  JERRY_UNUSED (transport_p);
   JERRY_ASSERT (data_size <= JERRY_CONTEXT (debugger_max_send_size));
 
   uint8_t *header_p = JERRY_CONTEXT (debugger_send_buffer);
@@ -510,9 +513,11 @@ jerry_debugger_send (size_t data_size) /**< data size */
  *         false - otherwise
  */
 static bool
-jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
+jerry_debugger_receive_ws (struct jerry_debugger_transport_t *transport_p, /**< transport object */
+                           jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
 
 {
+  JERRY_UNUSED (transport_p);
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
   JERRY_ASSERT (JERRY_CONTEXT (debugger_max_receive_size) <= 125);
 
@@ -631,10 +636,10 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
 
 static jerry_debugger_transport_t socket_transport =
 {
-  .accept_connection  = jerry_debugger_accept_connection,
-  .close_connection = jerry_debugger_close_connection,
-  .send = jerry_debugger_send,
-  .receive = jerry_debugger_receive,
+  .accept_connection  = jerry_debugger_accept_connection_ws,
+  .close_connection = jerry_debugger_close_connection_ws,
+  .send = jerry_debugger_send_ws,
+  .receive = jerry_debugger_receive_ws,
 };
 
 #endif /* JERRY_DEBUGGER */

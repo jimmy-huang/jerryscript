@@ -2819,7 +2819,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 
     while (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_PARSER_WAIT_MODE)
     {
-      JERRY_CONTEXT (debugger_transport_p)->receive (NULL);
+      JERRY_CONTEXT (debugger_transport_p)->receive (JERRY_CONTEXT (debugger_transport_p), NULL);
 
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
       {

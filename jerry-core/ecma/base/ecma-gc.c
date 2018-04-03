@@ -918,7 +918,7 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
          && JERRY_CONTEXT (debugger_byte_code_free_tail) != ECMA_NULL_POINTER)
   {
     /* Wait until all byte code is freed or the connection is aborted. */
-    JERRY_CONTEXT (debugger_transport_p)->receive (NULL);
+    JERRY_CONTEXT (debugger_transport_p)->receive (JERRY_CONTEXT (debugger_transport_p), NULL);
   }
 #endif /* JERRY_DEBUGGER */
 

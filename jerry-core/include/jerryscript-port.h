@@ -152,9 +152,11 @@ struct jerry_debugger_uint8_data_t;
 struct jerry_debugger_transport_t
 {
   bool (*accept_connection) (struct jerry_debugger_transport_t *transport_p);
-  void (*close_connection) (void);
-  bool (*send) (size_t data_size);
-  bool (*receive) (struct jerry_debugger_uint8_data_t **message_data_p);
+  void (*close_connection) (struct jerry_debugger_transport_t *transport_p);
+  bool (*send) (struct jerry_debugger_transport_t *transport_p,
+                size_t data_size);
+  bool (*receive) (struct jerry_debugger_transport_t *transport_p,
+                   struct jerry_debugger_uint8_data_t **message_data_p);
 };
 
 /**

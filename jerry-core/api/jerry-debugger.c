@@ -136,7 +136,8 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
 
     while (true)
     {
-      if (JERRY_CONTEXT (debugger_transport_p)->receive (&client_source_data_p))
+      if (JERRY_CONTEXT (debugger_transport_p)->receive (JERRY_CONTEXT (debugger_transport_p),
+                                                         &client_source_data_p))
       {
         if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
         {
