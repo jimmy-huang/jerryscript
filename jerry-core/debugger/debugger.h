@@ -16,7 +16,6 @@
 #ifndef DEBUGGER_H
 #define DEBUGGER_H
 
-#include "debugger-ws.h"
 #include "ecma-globals.h"
 
 #ifdef JERRY_DEBUGGER
@@ -42,6 +41,13 @@
   * This constant represents that the string to be sent has no subtype.
   */
 #define JERRY_DEBUGGER_NO_SUBTYPE 0
+
+/**
+ * Maximum number of bytes transmitted or received.
+ */
+#ifndef JERRY_DEBUGGER_MAX_BUFFER_SIZE
+#define JERRY_DEBUGGER_MAX_BUFFER_SIZE 128
+#endif
 
 /**
  * Limited resources available for the engine, so it is important to
@@ -222,6 +228,23 @@ typedef struct
 } jerry_debugger_byte_code_free_t;
 
 /**
+ * Incoming message: next message of string data.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+} jerry_debugger_receive_uint8_data_part_t;
+
+/**
+ * Byte data for evaluating expressions and receiving client source.
+ */
+typedef struct jerry_debugger_uint8_data_t
+{
+  uint32_t uint8_size; /**< total size of the client source */
+  uint32_t uint8_offset; /**< current offset in the client source */
+} jerry_debugger_uint8_data_t;
+
+/**
  * Outgoing message: JerryScript configuration.
  */
 typedef struct
@@ -400,6 +423,10 @@ bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_co
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
 bool jerry_debugger_send_exception_string (void);
+
+void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
+                                  const uint8_t *input2, size_t input2_len,
+                                  uint8_t output[20]);
 
 #endif /* JERRY_DEBUGGER */
 
