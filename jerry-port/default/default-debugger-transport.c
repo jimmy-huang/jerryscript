@@ -14,6 +14,7 @@
  */
 
 #include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
 #include "jmem.h"
 
 #ifdef JERRY_DEBUGGER
@@ -585,7 +586,7 @@ static struct jerry_debugger_transport_t socket_transport =
  * @return the transport created
  */
 struct jerry_debugger_transport_t *
-jerry_port_init_socket_transport (uint16_t tcp_port) /**< server port number */
+jerry_port_default_init_socket_transport (uint16_t tcp_port) /**< server port number */
 {
 #ifdef JERRY_DEBUGGER
   debugger_port = tcp_port;
@@ -594,4 +595,4 @@ jerry_port_init_socket_transport (uint16_t tcp_port) /**< server port number */
   JERRY_UNUSED (tcp_port);
   return NULL;
 #endif /* JERRY_DEBUGGER */
-} /* jerry_port_init_socket_transport */
+} /* jerry_port_default_init_socket_transport */
