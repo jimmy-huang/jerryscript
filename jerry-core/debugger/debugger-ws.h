@@ -44,15 +44,16 @@ typedef struct
   uint32_t uint8_offset; /**< current offset in the client source */
 } jerry_debugger_uint8_data_t;
 
-bool jerry_debugger_accept_connection (void);
-void jerry_debugger_close_connection (void);
-
-bool jerry_debugger_send (size_t data_size);
-bool jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p);
-
 void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
                                   const uint8_t *input2, size_t input2_len,
                                   uint8_t output[20]);
+
+bool jerry_debugger_init_ws (uint16_t tcp_port);
+bool jerry_debugger_accept_connection_ws (void);
+void jerry_debugger_close_connection_ws (void);
+bool jerry_debugger_send_ws (uint8_t *message_data_p, size_t data_size);
+bool jerry_debugger_receive_ws (uint8_t *message_data_p, size_t *data_size,
+                                uint32_t *data_offset);
 
 #endif /* JERRY_DEBUGGER */
 

@@ -119,9 +119,10 @@ typedef struct
   uint16_t debugger_receive_buffer_offset; /**< receive buffer offset */
   uint16_t debugger_port; /**< debugger socket communication port */
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
+  uint8_t debugger_send_header_size; /**< header size reserved when sending */
+  uint8_t debugger_receive_header_size; /**< header size reserved when receiving */
   uint8_t debugger_max_send_size; /**< maximum amount of data that can be written */
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */
-  int debugger_connection; /**< holds the file descriptor of the socket communication */
 #endif /* JERRY_DEBUGGER */
 
 #ifdef JERRY_ENABLE_LINE_INFO
